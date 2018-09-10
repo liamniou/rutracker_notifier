@@ -12,7 +12,7 @@ def add_topic(message):
     topic_url = message.text
     valid_topic_url = validate_url(topic_url)
     if valid_topic_url:
-        valid_topic_url = valid_topic_url[0]
+        valid_topic_url = valid_topic_url.group()
         db = SQLighter(database_name)
         db.add_topic(message.chat.id, valid_topic_url)
         bot.send_message(
@@ -20,7 +20,8 @@ def add_topic(message):
         )
     else:
         bot.send_message(
-            message.chat.id, "The URL you've entered is not valid. Check it and try one more time, please"
+            message.chat.id,
+            "The URL you've entered doesn't look like rutracker URL. Check it and try one more time, please"
         )
 
 
@@ -33,8 +34,9 @@ def list_topics(message):
         full_message_text += "{}\n".format("".join(row))
     bot.send_message(message.chat.id, full_message_text)
 
+
 def validate_url(string):
-    valid_url = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\), ]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', string)
+    valid_url = re.match("http[s]://(rutracker)(.*)(forum/viewtopic.php\?t=.*)", string)
     return valid_url
 
 
