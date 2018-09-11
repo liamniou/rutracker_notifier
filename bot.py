@@ -9,7 +9,7 @@ bot = telebot.TeleBot(token)
 
 @bot.message_handler(commands=['add'])
 def add_topic(message):
-    topic_url = message.text
+    topic_url = message.text.replace('/add ', '', 1)
     valid_topic_url = validate_url(topic_url)
     if valid_topic_url:
         valid_topic_url = valid_topic_url.group()
@@ -28,10 +28,10 @@ def add_topic(message):
 @bot.message_handler(commands=['list'])
 def list_topics(message):
     db = SQLighter(database_name)
-    topics = db.list_topics(message.chat.id)
+    sql_data = db.list_topics(message.chat.id)
     full_message_text = "Your subscriptions are:\n"
-    for row in topics:
-        full_message_text += "{}\n".format("".join(row))
+    for rows in sql_data:
+        full_message_text += "{}\n".format(rows[1])
     bot.send_message(message.chat.id, full_message_text)
 
 

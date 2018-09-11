@@ -17,7 +17,7 @@ class SQLighter:
     def list_topics(self, chat_id):
         with self.connection:
             return self.cursor.execute(
-                "SELECT url FROM subscriptions WHERE chat_id = {0}".format(chat_id)
+                "SELECT * FROM subscriptions WHERE chat_id = {0}".format(chat_id)
             ).fetchall()
 
     def close(self):
