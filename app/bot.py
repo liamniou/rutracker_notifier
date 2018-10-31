@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import telebot
 import re
-import schedule
 import time
 from multiprocessing import Process
-from sqliter import SQLighter
 from config import token, database_name
+from rss_checker import RSSchecker
+from sqliter import SQLighter
 
 bot = telebot.TeleBot(token)
 
@@ -36,7 +36,9 @@ def add_topic(message):
         db = SQLighter(database_name)
         subscription = db.check_subscription(message.chat.id, valid_topic_url)
         if not subscription:
-            db.add_topic(message.chat.id, valid_topic_url)
+            rss_checker = RSSchecker()
+            op_profile_id = rss_checker.get_profile_id(valid_topic_url)
+            db.add_topic(message.chat.id, valid_topic_url, op_profile_id)
             bot.send_message(
                 message.chat.id, "Topic {0} was successfully added into your subscription list".format(valid_topic_url)
             )
@@ -54,11 +56,15 @@ def add_topic(message):
 @bot.message_handler(commands=['list'])
 def list_topics(message):
     db = SQLighter(database_name)
-    sql_data = db.list_topics(message.chat.id)
+    sql_data = db.select_all_where('subscriptions', 'chat_id', message.chat.id)
     full_message_text = "Your subscriptions are:\n"
-    for rows in sql_data:
-        full_message_text += "{}\n".format(rows[1])
-    bot.send_message(message.chat.id, full_message_text)
+    if sql_data:
+        rss_checker = RSSchecker()
+        for rows in sql_data:
+            full_message_text += "{0} - {1}\n".format(rows[1], rss_checker.get_topic_title(rows[1]).replace(' :: RuTracker.org', ''))
+        bot.send_message(message.chat.id, full_message_text)
+    else:
+        bot.send_message(message.chat.id, 'You don''t have any subscriptions :(')
 
 
 @bot.message_handler(commands=['delete'])
@@ -93,10 +99,23 @@ def telegram_polling():
 
 def scheduled_check():
     while True:
-        bot.send_message(
-            294967926, "Hello"
-        )
-        time.sleep(60)
+        rss_checker = RSSchecker()
+        updated_topics = rss_checker.check_updates()
+        if updated_topics:
+            db = SQLighter(database_name)
+            subscriptions_data = db.select_all('subscriptions')
+            for topic in updated_topics:
+                for subscriptions_row in subscriptions_data:
+                    if topic[0] in subscriptions_row:
+                        bot.send_message(
+                            subscriptions_row[0], "{0} was updated on {1}".format(topic[0], topic[1])
+                        )
+                        # print('UPDATE topics SET last_update = "{1}" where url = "{0}"'.format(topic[0], topic[1]))
+                        db.update('topics', 'last_update', topic[1], 'url', topic[0])
+                        time.sleep(2)
+        else:
+            print('No updates')
+        time.sleep(1800)
 
 
 if __name__ == '__main__':
@@ -108,4 +127,4 @@ if __name__ == '__main__':
         except Exception as e:
             print(e)
             time.sleep(15)
-            #telegram_polling()
+            # telegram_polling()

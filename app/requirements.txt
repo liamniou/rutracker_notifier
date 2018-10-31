@@ -1,0 +1,11 @@
+beautifulsoup4==4.6.3
+certifi==2018.8.24
+chardet==3.0.4
+feedparser==5.2.1
+idna==2.7
+pyTelegramBotAPI==3.6.6
+requests==2.19.1
+schedule==0.5.0
+six==1.11.0
+untangle==1.1.1
+urllib3==1.23
