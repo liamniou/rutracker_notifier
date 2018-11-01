@@ -2,17 +2,36 @@
 import telebot
 import re
 import time
-import logging as log
 import threading
 import signal
 import sys
+import cherrypy
 from config import token, database_name
+from config import WEBHOOK_HOST, WEBHOOK_PORT, WEBHOOK_LISTEN, WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV
 from rss_checker import RSSchecker
 from sqliter import SQLighter
 
 bot = telebot.TeleBot(token)
 sub_timer = None
 
+WEBHOOK_URL_BASE = "https://%s:%s" % (WEBHOOK_HOST, WEBHOOK_PORT)
+WEBHOOK_URL_PATH = "/%s/" % (token)
+
+
+# WebhookServer, process webhook calls
+class WebhookServer(object):
+    @cherrypy.expose
+    def index(self):
+        if 'content-length' in cherrypy.request.headers and \
+           'content-type' in cherrypy.request.headers and \
+           cherrypy.request.headers['content-type'] == 'application/json':
+            length = int(cherrypy.request.headers['content-length'])
+            json_string = cherrypy.request.body.read(length)
+            update = telebot.types.Update.de_json(json_string)
+            bot.process_new_messages([update.message])
+            return ''
+        else:
+            raise cherrypy.HTTPError(403)
 
 @bot.message_handler(commands=['start', 'help'])
 def greet_new_user(message):
@@ -129,14 +148,23 @@ def main():
 
     signal.signal(signal.SIGINT, signal_handler)
 
-    while True:
-        try:
-            log.info('Starting bot polling...')
-            bot.polling(timeout=360)
-        except Exception as err:
-            log.error("Bot polling error: {0}".format(err.args))
-            bot.stop_polling()
-            time.sleep(30)
+    # Remove webhook, it fails sometimes the set if there is a previous webhook
+    bot.remove_webhook()
+
+    # Set webhook
+    bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH,
+                    certificate=open(WEBHOOK_SSL_CERT, 'r'))
+
+    # Start cherrypy server
+    cherrypy.config.update({
+        'server.socket_host': WEBHOOK_LISTEN,
+        'server.socket_port': WEBHOOK_PORT,
+        'server.ssl_module': 'builtin',
+        'server.ssl_certificate': WEBHOOK_SSL_CERT,
+        'server.ssl_private_key': WEBHOOK_SSL_PRIV
+    })
+
+    cherrypy.quickstart(WebhookServer(), WEBHOOK_URL_PATH, {'/': {}})
 
 
 if __name__ == '__main__':
