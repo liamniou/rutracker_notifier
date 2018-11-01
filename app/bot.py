@@ -2,12 +2,16 @@
 import telebot
 import re
 import time
-from multiprocessing import Process
+import logging as log
+import threading
+import signal
+import sys
 from config import token, database_name
 from rss_checker import RSSchecker
 from sqliter import SQLighter
 
 bot = telebot.TeleBot(token)
+sub_timer = None
 
 
 @bot.message_handler(commands=['start', 'help'])
@@ -88,43 +92,46 @@ def validate_url(string):
     return valid_url
 
 
-def telegram_polling():
-    try:
-        bot.polling(none_stop=True, timeout=60)
-    except:
-        bot.stop_polling()
-        time.sleep(10)
-        telegram_polling()
-
-
 def scheduled_check():
+    rss_checker = RSSchecker()
+    updated_topics = rss_checker.check_updates()
+    if updated_topics:
+        db = SQLighter(database_name)
+        subscriptions_data = db.select_all('subscriptions')
+        for topic in updated_topics:
+            for subscriptions_row in subscriptions_data:
+                if topic[0] in subscriptions_row:
+                    bot.send_message(
+                        subscriptions_row[0], "{0} was updated on {1}".format(topic[0], topic[1])
+                    )
+                    db.update('topics', 'last_update', topic[1], 'url', topic[0])
+                    time.sleep(2)
+    else:
+        print('No updates')
+
+
+def signal_handler(signal_number):
+    print('Received signal ' + str(signal_number)
+          + '. Trying to end tasks and exit...')
+    bot.stop_polling()
+    sub_timer.cancel()
+    sys.exit(0)
+
+
+def main():
+    sub_timer = threading.Timer(120, scheduled_check)
+    sub_timer.start()
+
+    signal.signal(signal.SIGINT, signal_handler)
     while True:
-        rss_checker = RSSchecker()
-        updated_topics = rss_checker.check_updates()
-        if updated_topics:
-            db = SQLighter(database_name)
-            subscriptions_data = db.select_all('subscriptions')
-            for topic in updated_topics:
-                for subscriptions_row in subscriptions_data:
-                    if topic[0] in subscriptions_row:
-                        bot.send_message(
-                            subscriptions_row[0], "{0} was updated on {1}".format(topic[0], topic[1])
-                        )
-                        # print('UPDATE topics SET last_update = "{1}" where url = "{0}"'.format(topic[0], topic[1]))
-                        db.update('topics', 'last_update', topic[1], 'url', topic[0])
-                        time.sleep(2)
-        else:
-            print('No updates')
-        time.sleep(1800)
+        try:
+            log.info('Starting bot polling...')
+            bot.polling()
+        except Exception as err:
+            log.error("Bot polling error: {0}".format(err.args))
+            bot.stop_polling()
+            time.sleep(30)
 
 
 if __name__ == '__main__':
-    p1 = Process(target=scheduled_check, args=())
-    p1.start()
-    while True:
-        try:
-            bot.polling(none_stop=True, timeout=60)
-        except Exception as e:
-            print(e)
-            time.sleep(15)
-            # telegram_polling()
+    main()
