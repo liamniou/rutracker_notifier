@@ -92,7 +92,7 @@ def validate_url(string):
     return valid_url
 
 
-def scheduled_check():
+def check_subscription_updates():
     rss_checker = RSSchecker()
     updated_topics = rss_checker.check_updates()
     if updated_topics:
@@ -108,9 +108,15 @@ def scheduled_check():
                     time.sleep(2)
     else:
         print('No updates')
+    loop_check()
 
 
-def signal_handler(signal_number):
+def loop_check():
+    sub_timer = threading.Timer(120, check_subscription_updates)
+    sub_timer.start()
+
+
+def signal_handler(signal_number, frame):
     print('Received signal ' + str(signal_number)
           + '. Trying to end tasks and exit...')
     bot.stop_polling()
@@ -119,14 +125,14 @@ def signal_handler(signal_number):
 
 
 def main():
-    sub_timer = threading.Timer(120, scheduled_check)
-    sub_timer.start()
+    loop_check()
 
     signal.signal(signal.SIGINT, signal_handler)
+
     while True:
         try:
             log.info('Starting bot polling...')
-            bot.polling()
+            bot.polling(timeout=360)
         except Exception as err:
             log.error("Bot polling error: {0}".format(err.args))
             bot.stop_polling()
