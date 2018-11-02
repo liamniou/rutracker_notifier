@@ -10,7 +10,7 @@ from config import token, database_name
 from rss_checker import RSSchecker
 from sqliter import SQLighter
 
-bot = telebot.TeleBot(token)
+bot = telebot.TeleBot(token, threaded=False)
 sub_timer = None
 
 
@@ -107,12 +107,12 @@ def check_subscription_updates():
                     db.update('topics', 'last_update', topic[1], 'url', topic[0])
                     time.sleep(2)
     else:
-        print('No updates')
+        log.info('No updates...')
     loop_check()
 
 
 def loop_check():
-    sub_timer = threading.Timer(120, check_subscription_updates)
+    sub_timer = threading.Timer(60, check_subscription_updates)
     sub_timer.start()
 
 
@@ -125,6 +125,9 @@ def signal_handler(signal_number, frame):
 
 
 def main():
+    log.basicConfig(level=log.INFO,
+                    format='%(asctime)s %(levelname)s %(message)s')
+    log.info('Bot was started.')
     loop_check()
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -132,7 +135,7 @@ def main():
     while True:
         try:
             log.info('Starting bot polling...')
-            bot.polling(timeout=360)
+            bot.polling()
         except Exception as err:
             log.error("Bot polling error: {0}".format(err.args))
             bot.stop_polling()

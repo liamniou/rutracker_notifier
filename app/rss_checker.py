@@ -7,6 +7,7 @@ import urllib.request as urllib_request
 import http
 import chardet
 import feedparser
+import logging as log
 from datetime import datetime
 
 
@@ -49,7 +50,7 @@ class RSSchecker:
                             [topic_url, rss_entry['updated']]
                         )
                 else:
-                    print("{} was not found in subscriptions. Check of updates is skipped for this topic".format(topic_url))
+                    log.info("{} was not found in subscriptions. Check of updates is skipped for this topic".format(topic_url))
         return updated_topics_set
 
     def generate_dict_of_rss_feeds(self, subscriptions_data):
