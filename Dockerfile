@@ -16,5 +16,5 @@ ADD /app/ /app/
 RUN pip install -r /app/requirements.txt
 
 # Run bot.py when the container launches
-CMD ["python", "/app/bot.py", "> /app/logs/bot.py_log"]
+CMD ["python", "/app/rutracker_notifier_bot.py", "> /app/logs/bot.py_log"]
 
