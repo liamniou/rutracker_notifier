@@ -33,6 +33,7 @@ class RSSchecker:
             for topic in topics_data:
                 topic_url = topic[0]
                 topic_last_update = topic[1]
+                log.info("Checking topic {} with last update date {}".format(topic_url, topic_last_update))
                 # get op_profile_id for this topic_url
                 for subscriptions_raw in subscriptions_data:
                     if topic_url in subscriptions_raw:
@@ -41,16 +42,20 @@ class RSSchecker:
                 if op_profile_id:
                     rss_data_object = feedparser.parse(rss_feeds_dict[op_profile_id])
                     for rss_entry in rss_data_object['entries']:
+                        db_topic_last_update_unified = datetime.strptime(
+                            topic_last_update, '%Y-%m-%dT%H:%M:%S+00:00'
+                        )
+                        rss_topic_last_update_unified = datetime.strptime(
+                            rss_entry['updated'], '%Y-%m-%dT%H:%M:%S+00:00'
+                        )
                         if topic_url == rss_entry['link'] \
-                                and datetime.strptime(
-                                    topic_last_update, '%Y-%m-%dT%H:%M:%S+00:00'
-                                ) < datetime.strptime(
-                                    rss_entry['updated'], '%Y-%m-%dT%H:%M:%S+00:00'):
+                                and db_topic_last_update_unified < rss_topic_last_update_unified:
+                            log.info("{} was updated since last check: {} < {}".format(topic_url))
                             updated_topics_set.append(
                             [topic_url, rss_entry['updated']]
                         )
                 else:
-                    log.info("{} was not found in subscriptions. Check of updates is skipped for this topic".format(topic_url))
+                    log.info("{} was not found in subscriptions. Updates check is skipped".format(topic_url))
         return updated_topics_set
 
     def generate_dict_of_rss_feeds(self, subscriptions_data):
