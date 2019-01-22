@@ -61,7 +61,6 @@ class RSSchecker:
         return updated_topics_set
 
     def generate_dict_of_rss_feeds(self, subscriptions_data):
-        db = SQLighter(database_name)
         op_profile_id_set = set()
         for entry in subscriptions_data:
             op_profile_id_set.add(entry[2])
