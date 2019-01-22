@@ -17,6 +17,7 @@ sub_timer = None
 
 @bot.message_handler(commands=['start', 'help'])
 def greet_new_user(message):
+    log.info("[FROM {}] [{}]".format(message.chat.id, message.text))
     welcome_msg = "\nWelcome to Rutracker_notifier bot!\nCommands available:\n" \
                   "/add - Add rutracker topic to your subscription list\n" \
                   "/list - Print list of your subscriptions\n" \
@@ -29,11 +30,13 @@ def greet_new_user(message):
             reply = "Hello, {} {}".format(message.chat.first_name, welcome_msg)
     else:
         reply = "Hello, {} {}".format(message.chat.title, welcome_msg)
+    log.info("[TO {}] [{}]".format(message.chat.id, reply))
     bot.send_message(message.chat.id, reply)
 
 
 @bot.message_handler(commands=['add'])
 def add_topic(message):
+    log.info("[FROM {}] [{}]".format(message.chat.id, message.text))
     topic_url = message.text.replace('/add ', '', 1)
     valid_topic_url = validate_url(topic_url).group()
     if valid_topic_url:
@@ -51,11 +54,13 @@ def add_topic(message):
             reply = "This topic already exists in your subscription list"
     else:
         reply = "The URL you've entered doesn't look like rutracker URL. Check it and try one more time, please"
+    log.info("[TO {}] [{}]".format(message.chat.id, reply))
     bot.send_message(message.chat.id, reply)
 
 
 @bot.message_handler(commands=['list'])
 def list_topics(message):
+    log.info("[FROM {}] [{}]".format(message.chat.id, message.text))
     db = SQLighter(database_name)
     sql_data = db.select_all_where('subscriptions', 'chat_id', message.chat.id)
     if sql_data:
@@ -65,11 +70,13 @@ def list_topics(message):
             reply += "{0} - {1}\n".format(rows[1], rss_checker.get_topic_title(rows[1]).replace(' :: RuTracker.org', ''))
     else:
         reply = "You don't have any subscriptions :("
+    log.info("[TO {}] [{}]".format(message.chat.id, reply))
     bot.send_message(message.chat.id, reply)
 
 
 @bot.message_handler(commands=['delete'])
 def delete_topic(message):
+    log.info("[FROM {}] [{}]".format(message.chat.id, message.text))
     topic_url = message.text.replace('/delete ', '', 1)
     db = SQLighter(database_name)
     subscription = db.check_subscription(message.chat.id, topic_url)
@@ -78,6 +85,7 @@ def delete_topic(message):
     else:
         db.delete_topic(message.chat.id, topic_url)
         reply = "The topic was successfully deleted from your subscription list".format(topic_url)
+    log.info("[TO {}] [{}]".format(message.chat.id, reply))
     bot.send_message(message.chat.id, reply)
 
 
