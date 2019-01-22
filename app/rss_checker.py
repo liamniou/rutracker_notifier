@@ -76,11 +76,16 @@ class RSSchecker:
 
     def get_profile_id(self, url):
         topic_page_soup = self.get_html_of_url(url)
-        all_a_links = topic_page_soup.find_all('a', attrs={'class': 'txtb'}, href=True)
-        for a_link in all_a_links:
-            if 'profile' in a_link['href']:
-                relative_profile_link = a_link['href']
-                profile_id = relative_profile_link.split('=')[-1]
+        all_tbodies_tags = topic_page_soup.find_all('tbody', attrs={'class': 'row1'})
+        tbody_post_ids = []
+        for tbody_tag in all_tbodies_tags:
+            tbody_post_ids.append(tbody_tag.get('id').replace('post_', ''))
+        tbody_post_ids.sort()
+        author_post_id = tbody_post_ids[0]
+        author_tbody_tag = topic_page_soup.find(id="post_{}".format(author_post_id))
+        links = author_tbody_tag.find_all('a', attrs={'class': 'txtb'}, href=True)
+        relative_profile_link = links[0].get('href')
+        profile_id = relative_profile_link.split('=')[-1]
         return profile_id
 
     def get_rss_feed(self, profile_id):

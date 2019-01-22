@@ -42,14 +42,19 @@ def add_topic(message):
         subscription = db.check_subscription(message.chat.id, valid_topic_url)
         if not subscription:
             rss_checker = RSSchecker()
-            op_profile_id = rss_checker.get_profile_id(valid_topic_url)
-            db.add_topic(message.chat.id, valid_topic_url, op_profile_id)
-            bot.send_message(
-                message.chat.id, "Topic {0} was successfully added into your subscription list".format(valid_topic_url)
-            )
+            author_profile_id = rss_checker.get_profile_id(valid_topic_url)
+            if author_profile_id:
+                db.add_topic(message.chat.id, valid_topic_url, author_profile_id)
+                bot.send_message(
+                    message.chat.id, "Topic {0} was successfully added into your subscription list".format(valid_topic_url)
+                )
+            else:
+                bot.send_message(
+                    message.chat.id, "Can't get author profile id of {}. Add it again please.".format(valid_topic_url)
+                )
         else:
             bot.send_message(
-                message.chat.id, "This topic already exists in your subscription list".format(valid_topic_url)
+                message.chat.id, "This topic already exists in your subscription list"
             )
     else:
         bot.send_message(
