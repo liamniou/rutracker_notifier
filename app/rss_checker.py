@@ -24,38 +24,40 @@ class RSSchecker:
 
     def check_updates(self):
         updated_topics_set = []
-        op_profile_id = None
+        author_profile_id = None
         db = SQLighter(database_name)
         subscriptions_data = db.select_all('subscriptions')
         if subscriptions_data:
             rss_feeds_dict = self.generate_dict_of_rss_feeds(subscriptions_data)
             topics_data = db.select_all('topics')
             for topic in topics_data:
-                topic_url = topic[0]
-                topic_last_update = topic[1]
-                log.info("Checking topic {} with last update date {}".format(topic_url, topic_last_update))
-                # get op_profile_id for this topic_url
+                db_topic_url = topic[0]
+                db_topic_last_update = topic[1]
+                log.info("Checking topic {} with last update date {}".format(db_topic_url, db_topic_last_update))
+                # get author_profile_id for this db_topic_url
                 for subscriptions_raw in subscriptions_data:
-                    if topic_url in subscriptions_raw:
-                        op_profile_id = subscriptions_raw[2]
-                # check if topic was updated after last check
-                if op_profile_id:
-                    rss_data_object = feedparser.parse(rss_feeds_dict[op_profile_id])
+                    if db_topic_url in subscriptions_raw:
+                        author_profile_id = subscriptions_raw[2]
+                # check if topic was updated since last check
+                if author_profile_id:
+                    rss_data_object = feedparser.parse(rss_feeds_dict[author_profile_id])
                     for rss_entry in rss_data_object['entries']:
                         db_topic_last_update_unified = datetime.strptime(
-                            topic_last_update, '%Y-%m-%dT%H:%M:%S+00:00'
+                            db_topic_last_update, '%Y-%m-%dT%H:%M:%S+00:00'
                         )
                         rss_topic_last_update_unified = datetime.strptime(
                             rss_entry['updated'], '%Y-%m-%dT%H:%M:%S+00:00'
                         )
-                        if topic_url == rss_entry['link'] \
+                        if db_topic_url == rss_entry['link'] \
                                 and db_topic_last_update_unified < rss_topic_last_update_unified:
-                            log.info("{} was updated since last check: {} < {}".format(topic_url))
+                            log.info("{} was updated since last check: {} < {}".format(
+                                db_topic_url, db_topic_last_update_unified, rss_topic_last_update_unified
+                            ))
                             updated_topics_set.append(
-                            [topic_url, rss_entry['updated']]
+                            [db_topic_url, rss_entry['updated']]
                         )
                 else:
-                    log.info("{} was not found in subscriptions. Updates check is skipped".format(topic_url))
+                    log.info("{} was not found in subscriptions. Updates check is skipped".format(db_topic_url))
         return updated_topics_set
 
     def generate_dict_of_rss_feeds(self, subscriptions_data):
