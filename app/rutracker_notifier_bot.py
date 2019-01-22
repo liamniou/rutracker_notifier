@@ -121,8 +121,6 @@ def signal_handler(signal_number, frame):
     print('Received signal ' + str(signal_number)
           + '. Trying to end tasks and exit...')
     bot.stop_polling()
-    if sub_timer.is_alive():
-        sub_timer.cancel()
     sys.exit(0)
 
 
@@ -130,18 +128,20 @@ def main():
     log.basicConfig(level=log.INFO,
                     format='%(asctime)s %(levelname)s %(message)s')
     log.info('Bot was started.')
-    loop_check()
-
-    signal.signal(signal.SIGINT, signal_handler)
+    # Signal handler doesn't work due to endless loop of check_subscription_updates in try/except
+    # signal.signal(signal.SIGINT, signal_handler)
 
     while True:
         try:
+            log.info('Starting loop check...')
+            loop_check()
             log.info('Starting bot polling...')
             bot.polling()
         except Exception as err:
+            signal.signal(signal.SIGINT, signal_handler)
             log.error("Bot polling error: {0}".format(err.args))
             bot.stop_polling()
-            time.sleep(30)
+            time.sleep(10)
 
 
 if __name__ == '__main__':

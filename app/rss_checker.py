@@ -18,9 +18,13 @@ class RSSchecker:
     def __login(self):
         cookies = http.cookiejar.FileCookieJar("cookies")
         opener = urllib_request.build_opener(urllib_request.HTTPCookieProcessor(cookies))
-        opener.open("https://rutracker.org/forum/login.php",
-                    "login_username={0}&login_password={1}&login=%C2%F5%EE%E4".format(rutracker_login, rutracker_password).encode("ascii"))
-        self.__opener = opener
+        try:
+            opener.open("https://rutracker.org/forum/login.php",
+                        "login_username={0}&login_password={1}&login=%C2%F5%EE%E4".format(rutracker_login, rutracker_password).encode("ascii"))
+            self.__opener = opener
+        except Exception as e:
+            log.error("Can't login to https://rutracker.org with error: {}".format(e.args))
+            raise ConnectionError("Can't login to https://rutracker.org")
 
     def check_updates(self):
         updated_topics_set = []
