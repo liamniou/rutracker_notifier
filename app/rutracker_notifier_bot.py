@@ -103,11 +103,10 @@ def check_subscription_updates():
         for topic in updated_topics:
             for subscriptions_row in subscriptions_data:
                 if topic[0] in subscriptions_row:
-                    bot.send_message(
-                        subscriptions_row[0], "{0} was updated on {1}".format(topic[0], topic[1])
-                    )
+                    reply = "{0} was updated on {1}".format(topic[0], topic[1])
+                    log.info("[TO {}] [{}]".format(subscriptions_row[0], reply))
+                    bot.send_message(subscriptions_row[0], reply)
                     db.update('topics', 'last_update', topic[1], 'url', topic[0])
-                    time.sleep(2)
     else:
         log.info('No updates...')
     loop_check()
