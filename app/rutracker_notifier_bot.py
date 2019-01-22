@@ -84,7 +84,7 @@ def delete_topic(message):
         reply = "Topic {0} was not found in your subscription list".format(topic_url)
     else:
         db.delete_topic(message.chat.id, topic_url)
-        reply = "The topic was successfully deleted from your subscription list".format(topic_url)
+        reply = "The topic was successfully deleted from your subscription list"
     log.info("[TO {}] [{}]".format(message.chat.id, reply))
     bot.send_message(message.chat.id, reply)
 
