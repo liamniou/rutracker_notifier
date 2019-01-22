@@ -113,7 +113,7 @@ def check_subscription_updates():
 
 
 def loop_check():
-    sub_timer = threading.Timer(60, check_subscription_updates)
+    sub_timer = threading.Timer(600, check_subscription_updates)
     sub_timer.start()
 
 
