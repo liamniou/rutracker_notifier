@@ -71,8 +71,13 @@ class RSSchecker:
 
     @staticmethod
     def get_html_of_url(url):
-        page_html = (requests.get(url)).text
-        return BeautifulSoup(page_html, 'html.parser')
+        try:
+            page_html = (requests.get(url)).text
+            soup_page_html = BeautifulSoup(page_html, 'html.parser')
+            return soup_page_html
+        except requests.exceptions.RequestException as e:
+            log.error(e)
+            return None
 
     def get_profile_id(self, url):
         topic_page_soup = self.get_html_of_url(url)

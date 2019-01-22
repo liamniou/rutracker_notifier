@@ -114,7 +114,8 @@ def signal_handler(signal_number, frame):
     print('Received signal ' + str(signal_number)
           + '. Trying to end tasks and exit...')
     bot.stop_polling()
-    sub_timer.cancel()
+    if sub_timer.is_alive():
+        sub_timer.cancel()
     sys.exit(0)
 
 
