@@ -24,13 +24,12 @@ def greet_new_user(message):
                   "/help - Print help message"
     if message.chat.first_name is not None:
         if message.chat.last_name is not None:
-            bot.send_message(
-                message.chat.id, "Hello, " + message.chat.first_name + " " + message.chat.last_name + welcome_msg
-            )
+            reply = "Hello, {} {} {}".format(message.chat.first_name, message.chat.last_name, welcome_msg)
         else:
-            bot.send_message(message.chat.id, "Hello, " + message.chat.first_name + welcome_msg)
+            reply = "Hello, {} {}".format(message.chat.first_name, welcome_msg)
     else:
-        bot.send_message(message.chat.id, "Hello, " + message.chat.title + welcome_msg)
+        reply = "Hello, {} {}".format(message.chat.title, welcome_msg)
+    bot.send_message(message.chat.id, reply)
 
 
 @bot.message_handler(commands=['add'])
@@ -45,36 +44,28 @@ def add_topic(message):
             author_profile_id = rss_checker.get_profile_id(valid_topic_url)
             if author_profile_id:
                 db.add_topic(message.chat.id, valid_topic_url, author_profile_id)
-                bot.send_message(
-                    message.chat.id, "Topic {0} was successfully added into your subscription list".format(valid_topic_url)
-                )
+                reply = "Topic {0} was successfully added into your subscription list".format(valid_topic_url)
             else:
-                bot.send_message(
-                    message.chat.id, "Can't get author profile id of {}. Add it again please.".format(valid_topic_url)
-                )
+                reply = "Can't get author profile id of {}. Try again please.".format(valid_topic_url)
         else:
-            bot.send_message(
-                message.chat.id, "This topic already exists in your subscription list"
-            )
+            reply = "This topic already exists in your subscription list"
     else:
-        bot.send_message(
-            message.chat.id,
-            "The URL you've entered doesn't look like rutracker URL. Check it and try one more time, please"
-        )
+        reply = "The URL you've entered doesn't look like rutracker URL. Check it and try one more time, please"
+    bot.send_message(message.chat.id, reply)
 
 
 @bot.message_handler(commands=['list'])
 def list_topics(message):
     db = SQLighter(database_name)
     sql_data = db.select_all_where('subscriptions', 'chat_id', message.chat.id)
-    full_message_text = "Your subscriptions are:\n"
     if sql_data:
         rss_checker = RSSchecker()
+        reply = "Your subscriptions are:\n"
         for rows in sql_data:
-            full_message_text += "{0} - {1}\n".format(rows[1], rss_checker.get_topic_title(rows[1]).replace(' :: RuTracker.org', ''))
-        bot.send_message(message.chat.id, full_message_text)
+            reply += "{0} - {1}\n".format(rows[1], rss_checker.get_topic_title(rows[1]).replace(' :: RuTracker.org', ''))
     else:
-        bot.send_message(message.chat.id, 'You don''t have any subscriptions :(')
+        reply = "You don't have any subscriptions :("
+    bot.send_message(message.chat.id, reply)
 
 
 @bot.message_handler(commands=['delete'])
@@ -83,14 +74,11 @@ def delete_topic(message):
     db = SQLighter(database_name)
     subscription = db.check_subscription(message.chat.id, topic_url)
     if not subscription:
-        bot.send_message(
-            message.chat.id, "Topic {0} was not found in your subscription list".format(topic_url)
-        )
+        reply = "Topic {0} was not found in your subscription list".format(topic_url)
     else:
         db.delete_topic(message.chat.id, topic_url)
-        bot.send_message(
-            message.chat.id, "The topic was successfully deleted from your subscription list".format(topic_url)
-        )
+        reply = "The topic was successfully deleted from your subscription list".format(topic_url)
+    bot.send_message(message.chat.id, reply)
 
 
 def validate_url(string):
