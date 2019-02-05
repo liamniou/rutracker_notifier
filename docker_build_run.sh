@@ -29,27 +29,14 @@ rutracker_password = "${rutracker_password}"
 EOL
 fi
 
-db_path='./app/rutracker_notifier.db'
-if [[ ! -f ~/rutracker_notifier_bot_app/rutracker_notifier.db ]]; then
-    echo -n "Enter path to DB file with data if you have any. To use default (${db_path}) just press [ENTER]: "
-    read user_db_path
-    if [[ -n $user_db_path ]]; then
-        db_path=$user_db_path
-    fi
-    cp $db_path ~/rutracker_notifier_bot_app/rutracker_notifier.db
-else
-    echo -n "~/rutracker_notifier_bot_app contains file rutracker_notifier.db. Replace it? [y/n]: "
-    read replace_db_file
-    if [[ ${replace_db_file,,} == "y" || ${replace_db_file,,} == "yes" ]]; then
-        echo -n "Enter path to DB file with data and press [ENTER]: "
-        read user_db_path
-        db_path=$user_db_path
-        cp $db_path ~/rutracker_notifier_bot_app/rutracker_notifier.db
-    fi
+echo -n "Enter path to DB file with data if you have any. To use default (./app/rutracker_notifier.db) just press [ENTER]: "
+read user_db_path
+if [[ -n $user_db_path ]]; then
+    rm -f ./app/rutracker_notifier.db
+    cp $user_db_path ./app/rutracker_notifier.db
 fi
-
 # Build image
 docker build -t rutracker_notifier_image .
 
 # Run container from image
-docker run -d --name=rutracker_notifier -v ~/rutracker_notifier_bot_app:/mnt rutracker_notifier_image
+docker run -d --name=rutracker_notifier -v rutracker_notifier_bot_app:/app rutracker_notifier_image

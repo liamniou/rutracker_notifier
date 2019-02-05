@@ -12,4 +12,4 @@ RUN pip install -r requirements.txt
 
 # Run bot.py when the container launches
 # CMD ["python", "rutracker_notifier_bot.py"]
-CMD ["/bin/sh", "-c", "python rutracker_notifier_bot.py > /mnt/rutracker_notifier_bot.log 2>&1"]
+CMD ["/bin/sh", "-c", "python rutracker_notifier_bot.py > /app/rutracker_notifier_bot.log 2>&1"]
