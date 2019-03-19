@@ -23,7 +23,7 @@ if [[ ${generate_config,,} == "y" || ${generate_config,,} == "yes" ]]; then
     read rutracker_password
     cat > ./app/config.py << EOL
 token = "${token}"
-database_name = "/mnt/rutracker_notifier.db"
+database_name = "/app/rutracker_notifier.db"
 rutracker_login = "${rutracker_username}"
 rutracker_password = "${rutracker_password}"
 EOL
