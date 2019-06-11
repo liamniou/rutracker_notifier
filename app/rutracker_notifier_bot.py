@@ -133,20 +133,11 @@ def main():
     log.basicConfig(level=log.INFO,
                     format='%(asctime)s %(levelname)s %(message)s')
     log.info('Bot was started.')
-    # Signal handler doesn't work due to endless loop of check_subscription_updates in try/except
-    # signal.signal(signal.SIGINT, signal_handler)
-
-    while True:
-        try:
-            log.info('Starting loop check...')
-            loop_check()
-            log.info('Starting bot polling...')
-            bot.polling()
-        except Exception as err:
-            signal.signal(signal.SIGINT, signal_handler)
-            log.error("Bot polling error: {0}".format(err.args))
-            bot.stop_polling()
-            time.sleep(10)
+    signal.signal(signal.SIGINT, signal_handler)
+    log.info('Starting loop check...')
+    loop_check()
+    log.info('Starting bot polling...')
+    bot.polling()
 
 
 if __name__ == '__main__':

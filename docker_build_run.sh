@@ -39,4 +39,4 @@ fi
 docker build -t rutracker_notifier_image .
 
 # Run container from image
-docker run -d --name=rutracker_notifier -v rutracker_notifier_bot_app:/app rutracker_notifier_image
+docker run -dit --restart unless-stopped --name=rutracker_notifier -v rutracker_notifier_bot_app:/app rutracker_notifier_image
