@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import telebot
 import re
-import time
 import logging as log
 import threading
 import signal
@@ -136,8 +135,12 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     log.info('Starting loop check...')
     loop_check()
-    log.info('Starting bot polling...')
-    bot.polling()
+    try:
+        log.info('Starting bot polling...')
+        bot.polling()
+    except:
+        log.error('Exit due to polling error')
+        sys.exit(1)
 
 
 if __name__ == '__main__':
