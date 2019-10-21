@@ -3,11 +3,11 @@ FROM python:3
 
 WORKDIR /app
 
-COPY ./app/requirements.txt ./
+COPY ./requirements.txt ./
 
 RUN pip install -r requirements.txt
 
-COPY ./app ./
+COPY ./ ./
 
 # Run bot.py when the container launches
-CMD ["python", "rutracker_notifier_bot.py"]
+CMD ["python", "main.py"]

@@ -1,0 +1,22 @@
+version: "3"
+services:
+  bot:
+    environment:
+      - TOKEN=$TOKEN
+    build: ./app
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 10
+        window: 120s
+    depends_on:
+    - mongodb
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    volumes:
+      - mongodbdata:/data/db
+volumes:
+  mongodbdata:
+    driver: local
