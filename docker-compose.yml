@@ -6,7 +6,7 @@ services:
     build: ./app
     deploy:
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 10s
         max_attempts: 10
         window: 120s
