@@ -15,8 +15,8 @@ TOKEN = os.environ.get('TOKEN')
 MONGODB_URI = os.environ.get('MONGODB_URI')
 bot = telebot.TeleBot(TOKEN)
 server = Flask(__name__)
-client = MongoClient(MONGODB_URI)
-db = client.rutracker_subscription
+client = MongoClient(MONGODB_URI, retryWrites=False)
+db = client.heroku_3bgh85mt
 
 
 def log_and_send_message_decorator(fn):
