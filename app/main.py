@@ -7,11 +7,15 @@ import threading
 import urllib.request
 import logging as log
 from pymongo import MongoClient
+from flask import Flask, request
 from selectolax.parser import HTMLParser
 
 
-bot = telebot.TeleBot(os.environ['TOKEN'], threaded=False)
-client = MongoClient('mongodb', 27017)
+TOKEN = os.environ.get('TOKEN')
+MONGODB_URI = os.environ.get('MONGODB_URI')
+bot = telebot.TeleBot(TOKEN)
+server = Flask(__name__)
+client = MongoClient(MONGODB_URI)
 db = client.rutracker_subscription
 
 
@@ -104,6 +108,19 @@ def list_topics(message):
     return reply
 
 
+@server.route('/' + TOKEN, methods=['POST'])
+def getMessage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url='https://rutracker-notifier.herokuapp.com/' + TOKEN)
+    return "!", 200
+
+
 def notify_users(page_url, diff):
     users_to_notify = db.users.find(
         {'subscriptions': {'$elemMatch': {'$eq': page_url}}}
@@ -150,8 +167,8 @@ def main():
     killall.install()
     log.info('Starting loop check...')
     loop_check()
-    log.info('Starting polling...')
-    bot.polling()
+    log.info('Starting Flask...')
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
 
 
 if __name__ == '__main__':

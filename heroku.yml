@@ -1,0 +1,5 @@
+build:
+  docker:
+    app: app/Dockerfile
+run:
+  app: python main.py
