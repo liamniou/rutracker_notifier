@@ -10,8 +10,11 @@ from pymongo import MongoClient
 from selectolax.parser import HTMLParser
 
 
-bot = telebot.TeleBot(os.environ['TOKEN'], threaded=False)
-client = MongoClient('mongodb', 27017)
+TOKEN = os.environ.get('TOKEN')
+URL = os.environ.get('URL')
+bot = telebot.TeleBot(TOKEN)
+server = Flask(__name__)
+client = MongoClient('mongodb', 21017)
 db = client.rutracker_subscription
 
 
@@ -102,6 +105,19 @@ def list_topics(message):
     for subscription in user_entry['subscriptions']:
         reply += "{0}\n".format(subscription)
     return reply
+
+
+@server.route('/' + TOKEN, methods=['POST'])
+def getMessage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url='{}/{}'.format(URL, TOKEN))
+    return "!", 200
 
 
 def notify_users(page_url, diff):

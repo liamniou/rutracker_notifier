@@ -1,8 +1,10 @@
 version: "3"
 services:
   bot:
+    container_name: bot
     environment:
       - TOKEN=$TOKEN
+      - URL=$URL
     build: ./app
     deploy:
       restart_policy:
@@ -10,6 +12,8 @@ services:
         delay: 10s
         max_attempts: 10
         window: 120s
+    ports:
+      - 5000:5000
     depends_on:
     - mongodb
   mongodb:
@@ -17,6 +21,19 @@ services:
     container_name: mongodb
     volumes:
       - mongodbdata:/data/db
+  ngrok:
+    image: wernight/ngrok
+    container_name: ngrok
+    links:
+      - bot
+    stdin_open: true
+    tty: true
+    ports:
+      - 443:443
+      - 4040:4040
+    environment:
+      - NGROK_REGION=eu
+      - NGROK_PORT=bot:5000
 volumes:
   mongodbdata:
     driver: local
