@@ -1,5 +1,5 @@
 build:
   docker:
-    app: app/Dockerfile
+    worker: app/Dockerfile
 run:
-  app: python main.py
+  worker: python main.py
