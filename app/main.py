@@ -7,6 +7,7 @@ import threading
 import urllib.request
 import logging as log
 from pymongo import MongoClient
+from flask import Flask, request
 from selectolax.parser import HTMLParser
 
 
@@ -14,7 +15,7 @@ TOKEN = os.environ.get('TOKEN')
 URL = os.environ.get('URL')
 bot = telebot.TeleBot(TOKEN)
 server = Flask(__name__)
-client = MongoClient('mongodb', 21017)
+client = MongoClient("mongodb://mongodb:27017")
 db = client.rutracker_subscription
 
 
@@ -160,14 +161,16 @@ def loop_check():
 
 
 def main():
+    print(URL)
+    print(TOKEN)
     log.basicConfig(level=log.INFO,
                     format='%(asctime)s %(levelname)s %(message)s')
     log.info('Starting killall...')
     killall.install()
     log.info('Starting loop check...')
     loop_check()
-    log.info('Starting polling...')
-    bot.polling()
+    log.info('Starting Flask...')
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
 
 
 if __name__ == '__main__':
