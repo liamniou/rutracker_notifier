@@ -10,17 +10,6 @@ services:
       - MONGO_CONNECTION_STRING
     ports:
       - 5000:5000
-    depends_on:
-      - mongodb
-    links:
-      - mongodb
-  mongodb:
-    image: mongo
-    container_name: mongodb
-    volumes:
-      - mongodbdata:/data/db
-    ports:
-      - 27017:27017
   ngrok:
     image: wernight/ngrok
     container_name: ngrok
