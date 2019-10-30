@@ -16,7 +16,7 @@ TOKEN = os.environ.get('TOKEN')
 URL = os.environ.get('URL')
 bot = telebot.TeleBot(TOKEN)
 server = Flask(__name__)
-client = MongoClient("mongodb://mongodb:27017")
+client = MongoClient(os.environ.get('MONGO_CONNECTION_STRING'))
 db = client.rutracker_subscription
 
 
