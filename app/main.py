@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import killall
 import difflib
 import telebot
@@ -29,14 +30,19 @@ def log_and_send_message_decorator(fn):
 
 
 def get_html_page_title(url):
-    with urllib.request.urlopen(url) as url_object:
+    with urllib.request.urlopen(url, timeout=10) as url_object:
         raw_html = url_object.read()
     selector = "meta"
     for node in HTMLParser(raw_html).css(selector):
         if 'name' in node.attributes and node.attributes['name'] == 'description':
             content = node.attributes['content']
             break
-    return content
+    if content:
+        return content
+    else:
+        log.info("Unable retrieve content. Sleeping for 60 seconds...")
+        time.sleep(60)
+        get_html_page_title(url)
 
 
 def validate_url(string):
