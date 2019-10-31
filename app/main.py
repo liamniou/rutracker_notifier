@@ -1,14 +1,12 @@
 import os
 import re
 import time
-import killall
 import difflib
 import telebot
-import threading
 import urllib.request
 import logging as log
 from pymongo import MongoClient
-from flask import Flask, request
+from flask import Flask, request, make_response
 from selectolax.parser import HTMLParser
 
 
@@ -127,18 +125,7 @@ def webhook():
     return "!", 200
 
 
-def notify_users(page_url, diff):
-    users_to_notify = db.users.find(
-        {'subscriptions': {'$elemMatch': {'$eq': page_url}}}
-    )
-    if users_to_notify.count() > 0:
-        for user in users_to_notify:
-            message_to_send = 'Page {} was updated. Diff: {}'.format(page_url, diff)
-            log.info("[TO {}] [{}]".format(user['telegram_id'], message_to_send))
-            bot.send_message(user['telegram_id'], message_to_send)
-    return 0
-
-
+@server.route("/check_subscription_updates")
 def check_subscription_updates():
     users = db.users.find({})
     all_subscriptions = []
@@ -159,22 +146,24 @@ def check_subscription_updates():
             )
         else:
             log.info('{} not changed since last check'.format(page['url']))
-    loop_check()
+    return make_response('Check was successful', 200)
 
 
-def loop_check():
-    threading.Timer(3600, check_subscription_updates).start()
+def notify_users(page_url, diff):
+    users_to_notify = db.users.find(
+        {'subscriptions': {'$elemMatch': {'$eq': page_url}}}
+    )
+    if users_to_notify.count() > 0:
+        for user in users_to_notify:
+            message_to_send = 'Page {} was updated. Diff: {}'.format(page_url, diff)
+            log.info("[TO {}] [{}]".format(user['telegram_id'], message_to_send))
+            bot.send_message(user['telegram_id'], message_to_send)
+    return 0
 
 
 def main():
-    print(URL)
-    print(TOKEN)
     log.basicConfig(level=log.INFO,
                     format='%(asctime)s %(levelname)s %(message)s')
-    log.info('Starting killall...')
-    killall.install()
-    log.info('Starting loop check...')
-    loop_check()
     log.info('Starting Flask...')
     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
 
