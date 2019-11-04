@@ -5,9 +5,9 @@ services:
     build:
       context: ./app
     environment:
-      - TOKEN
-      - URL
-      - MONGO_CONNECTION_STRING
+      URL: ${URL}
+      TOKEN: ${TOKEN}
+      MONGO_CONNECTION_STRING: ${MONGO_CONNECTION_STRING}
     ports:
       - 5000:5000
   ngrok:
