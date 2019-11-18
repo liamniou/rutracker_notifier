@@ -30,17 +30,15 @@ def log_and_send_message_decorator(fn):
 def get_html_page_title(url):
     with urllib.request.urlopen(url, timeout=10) as url_object:
         raw_html = url_object.read()
-    selector = "meta"
-    for node in HTMLParser(raw_html).css(selector):
-        if 'name' in node.attributes and node.attributes['name'] == 'description':
-            content = node.attributes['content']
-            break
+    content = ""
+    for node in HTMLParser(raw_html).tags('title'):
+        content = node.text()
+        break
     if content:
         return content
     else:
-        log.info("Unable retrieve content. Sleeping for 60 seconds...")
-        time.sleep(60)
-        get_html_page_title(url)
+        log.info("Unable retrieve content for {}".format(url))
+        return None
 
 
 def validate_url(string):
@@ -135,7 +133,7 @@ def check_subscription_updates():
     for subscription in subscriptions:
         page = db.url_title.find_one({'url': subscription})
         remote_title = get_html_page_title(subscription)
-        if remote_title != page['title']:
+        if remote_title and remote_title != page['title']:
             diff = [li for li in difflib.ndiff(page['title'], remote_title) if li[0] != ' ']
             log.info('{} changed: {}'.format(page['url'], diff))
             notify_users(page['url'], diff)
